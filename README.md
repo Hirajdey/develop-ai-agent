@@ -199,6 +199,465 @@ print(response.content)
 
 This example demonstrates the basic concept of a LangChain Chain, where the output of one component (Prompt Template) becomes the input of the next component (LLM).
 
+
+# Switching Between Multiple LLM Providers
+
+As AI applications grow, it is common to support multiple Large Language Model (LLM) providers such as OpenAI, Google Gemini, and Ollama. Instead of hardcoding a specific provider inside the application, we can create a centralized LLM provider module and switch providers using environment variables.
+
+This approach makes the application more flexible, maintainable, and easier to test across different models.
+
+---
+
+## Benefits
+
+* Easily switch between OpenAI, Gemini, and Ollama.
+* No code changes required when changing providers.
+* Keeps provider-specific logic separate from business logic.
+* Makes the application more scalable and maintainable.
+
+---
+
+## Project Structure
+
+```text
+develop-ai-agent/
+│
+├── .env
+├── main.py
+├── llm_provider.py
+├── pyproject.toml
+├── uv.lock
+└── .venv/
+```
+
+---
+
+## Install Required Packages
+
+```bash
+uv add langchain-openai
+uv add langchain-google-genai
+uv add langchain-ollama
+```
+
+---
+
+## Environment Configuration
+
+Create a `.env` file:
+
+```env
+LLM_PROVIDER=openai
+
+OPENAI_API_KEY=your_openai_api_key
+GOOGLE_API_KEY=your_google_api_key
+```
+
+To switch providers:
+
+```env
+LLM_PROVIDER=gemini
+```
+
+or
+
+```env
+LLM_PROVIDER=ollama
+```
+
+---
+
+## Creating the LLM Provider Module
+
+Create a file named `llm_provider.py`.
+
+```python
+import os
+
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_ollama import ChatOllama
+from langchain_openai import ChatOpenAI
+
+
+def get_llm():
+    provider = os.getenv("LLM_PROVIDER", "openai")
+
+    if provider == "openai":
+        return ChatOpenAI(
+            model="gpt-5.5",
+            temperature=0,
+        )
+
+    if provider == "gemini":
+        return ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash",
+            temperature=0,
+        )
+
+    if provider == "ollama":
+        return ChatOllama(
+            model="llama3.2",
+            temperature=0,
+        )
+
+    raise ValueError(
+        f"Unsupported LLM provider: {provider}"
+    )
+```
+
+---
+
+## Using the Provider in Main Application
+
+```python
+from dotenv import load_dotenv
+from langchain_core.prompts import PromptTemplate
+
+from llm_provider import get_llm
+
+load_dotenv()
+
+
+def main():
+    information = """
+    Born and raised in a Muslim family in Rameswaram, Tamil Nadu,
+    Kalam studied physics and aerospace engineering.
+    """
+
+    summary_template = """
+    Given the information {information}
+    about a person, create:
+
+    1. A short summary
+    2. Two interesting facts about them
+    """
+
+    summary_prompt_template = PromptTemplate(
+        input_variables=["information"],
+        template=summary_template,
+    )
+
+    llm = get_llm()
+
+    chain = summary_prompt_template | llm
+
+    response = chain.invoke(
+        {"information": information}
+    )
+
+    print(response.content)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## Workflow
+
+```text
+                .env
+                  │
+                  ▼
+        LLM_PROVIDER=openai
+                  │
+                  ▼
+         get_llm() Function
+                  │
+       ┌──────────┼──────────┐
+       │          │          │
+       ▼          ▼          ▼
+    OpenAI     Gemini     Ollama
+       │          │          │
+       └──────────┼──────────┘
+                  │
+                  ▼
+         LangChain Chain
+                  │
+                  ▼
+           AI Response
+```
+
+---
+
+## How It Works
+
+1. The application reads the selected provider from the `.env` file.
+2. The `get_llm()` function creates the appropriate LLM instance.
+3. The LangChain chain uses the returned model.
+4. Changing the provider only requires updating the `.env` file.
+5. No modifications are needed in the application logic.
+
+---
+
+## Example Provider Switching
+
+### OpenAI
+
+```env
+LLM_PROVIDER=openai
+```
+
+### Google Gemini
+
+```env
+LLM_PROVIDER=gemini
+```
+
+### Ollama
+
+```env
+LLM_PROVIDER=ollama
+```
+
+This design follows the Separation of Concerns principle by keeping LLM configuration isolated from the rest of the application.
+
+
+
+# Additional Setup for Ollama
+
+## What is Ollama?
+
+Ollama is a platform that allows you to run Large Language Models (LLMs) locally on your machine. Unlike cloud-based providers such as OpenAI or Google Gemini, Ollama does not require an API key and can run models directly on your computer.
+
+Commonly used models include:
+
+* Llama 3.2
+* Qwen 3
+* Mistral
+* Gemma
+
+---
+
+# Install Ollama
+
+Download and install Ollama from:
+
+https://ollama.com/download
+
+After installation, verify that Ollama is available on your system.
+
+```bash
+ollama --version
+```
+
+Expected output:
+
+```text
+ollama version x.x.x
+```
+
+---
+
+# Download a Model
+
+Before using Ollama with LangChain, you must download at least one model.
+
+Example:
+
+```bash
+ollama pull llama3.2
+```
+
+For coding and AI Agent development:
+
+```bash
+ollama pull qwen3
+```
+
+---
+
+# List Installed Models
+
+To see all downloaded models:
+
+```bash
+ollama list
+```
+
+Example output:
+
+```text
+NAME        ID        SIZE
+llama3.2    xxxxxx    2.0 GB
+qwen3       xxxxxx    5.2 GB
+```
+
+---
+
+# Test a Model
+
+Run the model directly from the terminal:
+
+```bash
+ollama run llama3.2
+```
+
+Example:
+
+```text
+>>> Who was A.P.J. Abdul Kalam?
+```
+
+Exit the chat session:
+
+```text
+/bye
+```
+
+or
+
+```text
+Ctrl + C
+```
+
+---
+
+# Install LangChain Ollama Integration
+
+Add the LangChain Ollama package to your project:
+
+```bash
+uv add langchain-ollama
+```
+
+---
+
+# Configure Environment Variables
+
+Unlike OpenAI or Gemini, Ollama does not require an API key.
+
+Example:
+
+```env
+LLM_PROVIDER=ollama
+```
+
+---
+
+# Using Ollama in LangChain
+
+```python
+from langchain_ollama import ChatOllama
+
+llm = ChatOllama(
+    model="llama3.2",
+    temperature=0,
+)
+```
+
+---
+
+# Using Ollama with Multiple Providers
+
+Example `.env` configuration:
+
+```env
+LLM_PROVIDER=ollama
+```
+
+Switching to OpenAI:
+
+```env
+LLM_PROVIDER=openai
+```
+
+Switching to Gemini:
+
+```env
+LLM_PROVIDER=gemini
+```
+
+No code changes are required if your application uses a centralized `get_llm()` provider function.
+
+---
+
+# Recommended Models
+
+## Llama 3.2
+
+```bash
+ollama pull llama3.2
+```
+
+Good for:
+
+* Learning LangChain
+* Prompt Engineering
+* Basic AI Agents
+* General-purpose tasks
+
+---
+
+## Qwen 3
+
+```bash
+ollama pull qwen3
+```
+
+Good for:
+
+* Coding
+* Tool Calling
+* AI Agents
+* LangGraph
+* Reasoning Tasks
+
+---
+
+## Mistral
+
+```bash
+ollama pull mistral
+```
+
+Good for:
+
+* Fast inference
+* Lightweight local deployments
+
+---
+
+# Ollama Workflow
+
+```text
+Install Ollama
+        ↓
+Download Model
+        ↓
+Verify Installation
+        ↓
+Install langchain-ollama
+        ↓
+Configure LLM_PROVIDER=ollama
+        ↓
+Create ChatOllama Instance
+        ↓
+Use Inside LangChain Chains
+        ↓
+Generate Responses
+```
+
+---
+
+# Benefits of Ollama
+
+* Runs completely locally
+* No API key required
+* No usage costs
+* Supports multiple open-source models
+* Easy integration with LangChain
+* Great for learning AI Agents and LangGraph
+
+---
+
+# Summary
+
+Ollama provides a simple way to run open-source LLMs locally and integrate them with LangChain. By combining Ollama with a provider abstraction layer, you can easily switch between OpenAI, Gemini, and local models without modifying your application code.
+
+
+
 -->
 
 # Agentic AI - LangChain & LangGraph
@@ -641,3 +1100,457 @@ print(response.content)
 5. The response is returned and printed to the console.
 
 This example demonstrates the basic concept of a LangChain Chain, where the output of one component (Prompt Template) becomes the input of the next component (LLM).
+
+# Switching Between Multiple LLM Providers
+
+As AI applications grow, it is common to support multiple Large Language Model (LLM) providers such as OpenAI, Google Gemini, and Ollama. Instead of hardcoding a specific provider inside the application, we can create a centralized LLM provider module and switch providers using environment variables.
+
+This approach makes the application more flexible, maintainable, and easier to test across different models.
+
+---
+
+## Benefits
+
+- Easily switch between OpenAI, Gemini, and Ollama.
+- No code changes required when changing providers.
+- Keeps provider-specific logic separate from business logic.
+- Makes the application more scalable and maintainable.
+
+---
+
+## Project Structure
+
+```text
+develop-ai-agent/
+│
+├── .env
+├── main.py
+├── llm_provider.py
+├── pyproject.toml
+├── uv.lock
+└── .venv/
+```
+
+---
+
+## Install Required Packages
+
+```bash
+uv add langchain-openai
+uv add langchain-google-genai
+uv add langchain-ollama
+```
+
+---
+
+## Environment Configuration
+
+Create a `.env` file:
+
+```env
+LLM_PROVIDER=openai
+
+OPENAI_API_KEY=your_openai_api_key
+GOOGLE_API_KEY=your_google_api_key
+```
+
+To switch providers:
+
+```env
+LLM_PROVIDER=gemini
+```
+
+or
+
+```env
+LLM_PROVIDER=ollama
+```
+
+---
+
+## Creating the LLM Provider Module
+
+Create a file named `llm_provider.py`.
+
+```python
+import os
+
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_ollama import ChatOllama
+from langchain_openai import ChatOpenAI
+
+
+def get_llm():
+    provider = os.getenv("LLM_PROVIDER", "openai")
+
+    if provider == "openai":
+        return ChatOpenAI(
+            model="gpt-5.5",
+            temperature=0,
+        )
+
+    if provider == "gemini":
+        return ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash",
+            temperature=0,
+        )
+
+    if provider == "ollama":
+        return ChatOllama(
+            model="llama3.2",
+            temperature=0,
+        )
+
+    raise ValueError(
+        f"Unsupported LLM provider: {provider}"
+    )
+```
+
+---
+
+## Using the Provider in Main Application
+
+```python
+from dotenv import load_dotenv
+from langchain_core.prompts import PromptTemplate
+
+from llm_provider import get_llm
+
+load_dotenv()
+
+
+def main():
+    information = """
+    Born and raised in a Muslim family in Rameswaram, Tamil Nadu,
+    Kalam studied physics and aerospace engineering.
+    """
+
+    summary_template = """
+    Given the information {information}
+    about a person, create:
+
+    1. A short summary
+    2. Two interesting facts about them
+    """
+
+    summary_prompt_template = PromptTemplate(
+        input_variables=["information"],
+        template=summary_template,
+    )
+
+    llm = get_llm()
+
+    chain = summary_prompt_template | llm
+
+    response = chain.invoke(
+        {"information": information}
+    )
+
+    print(response.content)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## Workflow
+
+```text
+                .env
+                  │
+                  ▼
+        LLM_PROVIDER=openai
+                  │
+                  ▼
+         get_llm() Function
+                  │
+       ┌──────────┼──────────┐
+       │          │          │
+       ▼          ▼          ▼
+    OpenAI     Gemini     Ollama
+       │          │          │
+       └──────────┼──────────┘
+                  │
+                  ▼
+         LangChain Chain
+                  │
+                  ▼
+           AI Response
+```
+
+---
+
+## How It Works
+
+1. The application reads the selected provider from the `.env` file.
+2. The `get_llm()` function creates the appropriate LLM instance.
+3. The LangChain chain uses the returned model.
+4. Changing the provider only requires updating the `.env` file.
+5. No modifications are needed in the application logic.
+
+---
+
+## Example Provider Switching
+
+### OpenAI
+
+```env
+LLM_PROVIDER=openai
+```
+
+### Google Gemini
+
+```env
+LLM_PROVIDER=gemini
+```
+
+### Ollama
+
+```env
+LLM_PROVIDER=ollama
+```
+
+This design follows the Separation of Concerns principle by keeping LLM configuration isolated from the rest of the application.
+
+# Additional Setup for Ollama
+
+## What is Ollama?
+
+Ollama is a platform that allows you to run Large Language Models (LLMs) locally on your machine. Unlike cloud-based providers such as OpenAI or Google Gemini, Ollama does not require an API key and can run models directly on your computer.
+
+Commonly used models include:
+
+- Llama 3.2
+- Qwen 3
+- Mistral
+- Gemma
+
+---
+
+# Install Ollama
+
+Download and install Ollama from:
+
+https://ollama.com/download
+
+After installation, verify that Ollama is available on your system.
+
+```bash
+ollama --version
+```
+
+Expected output:
+
+```text
+ollama version x.x.x
+```
+
+---
+
+# Download a Model
+
+Before using Ollama with LangChain, you must download at least one model.
+
+Example:
+
+```bash
+ollama pull llama3.2
+```
+
+For coding and AI Agent development:
+
+```bash
+ollama pull qwen3
+```
+
+---
+
+# List Installed Models
+
+To see all downloaded models:
+
+```bash
+ollama list
+```
+
+Example output:
+
+```text
+NAME        ID        SIZE
+llama3.2    xxxxxx    2.0 GB
+qwen3       xxxxxx    5.2 GB
+```
+
+---
+
+# Test a Model
+
+Run the model directly from the terminal:
+
+```bash
+ollama run llama3.2
+```
+
+Example:
+
+```text
+>>> Who was A.P.J. Abdul Kalam?
+```
+
+Exit the chat session:
+
+```text
+/bye
+```
+
+or
+
+```text
+Ctrl + C
+```
+
+---
+
+# Install LangChain Ollama Integration
+
+Add the LangChain Ollama package to your project:
+
+```bash
+uv add langchain-ollama
+```
+
+---
+
+# Configure Environment Variables
+
+Unlike OpenAI or Gemini, Ollama does not require an API key.
+
+Example:
+
+```env
+LLM_PROVIDER=ollama
+```
+
+---
+
+# Using Ollama in LangChain
+
+```python
+from langchain_ollama import ChatOllama
+
+llm = ChatOllama(
+    model="llama3.2",
+    temperature=0,
+)
+```
+
+---
+
+# Using Ollama with Multiple Providers
+
+Example `.env` configuration:
+
+```env
+LLM_PROVIDER=ollama
+```
+
+Switching to OpenAI:
+
+```env
+LLM_PROVIDER=openai
+```
+
+Switching to Gemini:
+
+```env
+LLM_PROVIDER=gemini
+```
+
+No code changes are required if your application uses a centralized `get_llm()` provider function.
+
+---
+
+# Recommended Models
+
+## Llama 3.2
+
+```bash
+ollama pull llama3.2
+```
+
+Good for:
+
+- Learning LangChain
+- Prompt Engineering
+- Basic AI Agents
+- General-purpose tasks
+
+---
+
+## Qwen 3
+
+```bash
+ollama pull qwen3
+```
+
+Good for:
+
+- Coding
+- Tool Calling
+- AI Agents
+- LangGraph
+- Reasoning Tasks
+
+---
+
+## Mistral
+
+```bash
+ollama pull mistral
+```
+
+Good for:
+
+- Fast inference
+- Lightweight local deployments
+
+---
+
+# Ollama Workflow
+
+```text
+Install Ollama
+        ↓
+Download Model
+        ↓
+Verify Installation
+        ↓
+Install langchain-ollama
+        ↓
+Configure LLM_PROVIDER=ollama
+        ↓
+Create ChatOllama Instance
+        ↓
+Use Inside LangChain Chains
+        ↓
+Generate Responses
+```
+
+---
+
+# Benefits of Ollama
+
+- Runs completely locally
+- No API key required
+- No usage costs
+- Supports multiple open-source models
+- Easy integration with LangChain
+- Great for learning AI Agents and LangGraph
+
+---
+
+# Summary
+
+Ollama provides a simple way to run open-source LLMs locally and integrate them with LangChain. By combining Ollama with a provider abstraction layer, you can easily switch between OpenAI, Gemini, and local models without modifying your application code.
