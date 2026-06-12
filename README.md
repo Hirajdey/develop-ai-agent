@@ -657,6 +657,18 @@ Generate Responses
 Ollama provides a simple way to run open-source LLMs locally and integrate them with LangChain. By combining Ollama with a provider abstraction layer, you can easily switch between OpenAI, Gemini, and local models without modifying your application code.
 
 
+# VS Code Debug Setup (Python + uv)
+
+Before starting debugging, open the actual project folder in VS Code (the folder containing `pyproject.toml`, `.venv`, and source files). Make sure the uv virtual environment is created and select the `.venv` Python interpreter in VS Code.
+
+Configure `.vscode/settings.json` to point to the project virtual environment and create a `launch.json` debug configuration. Verify that VS Code debugger is using `.venv\Scripts\python.exe` instead of the global Python installation.
+
+After setup, add breakpoints and start debugging with `F5`. The debugger should run with the same environment as:
+
+```bash
+uv run python main.py
+```
+
 
 -->
 
@@ -1554,3 +1566,45 @@ Generate Responses
 # Summary
 
 Ollama provides a simple way to run open-source LLMs locally and integrate them with LangChain. By combining Ollama with a provider abstraction layer, you can easily switch between OpenAI, Gemini, and local models without modifying your application code.
+
+# VS Code Debug Setup (Python + uv)
+
+Before starting debugging, open the actual project folder in VS Code (the folder containing `pyproject.toml`, `.venv`, and source files). Make sure the uv virtual environment is created and select the `.venv` Python interpreter in VS Code.
+
+Configure `.vscode/settings.json` to point to the project virtual environment and create a `launch.json` debug configuration. Verify that VS Code debugger is using `.venv\Scripts\python.exe` instead of the global Python installation.
+
+Create a .vscode folder inside the project root to store VS Code-specific configurations :
+
+```
+    └── .vscode/
+        ├── settings.json
+        └── launch.json
+
+    settings.json:
+
+    {
+    "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe"
+    }
+
+    launch.json:
+
+    {
+        "version": "0.2.0",
+        "configurations": [
+            {
+            "name": "Debug main.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "envFile": "${workspaceFolder}/.env"
+            }
+        ]
+    }
+```
+
+After setup, add breakpoints and start debugging with `F5`. The debugger should run with the same environment as:
+
+```bash
+uv run python main.py
+```
