@@ -669,6 +669,114 @@ After setup, add breakpoints and start debugging with `F5`. The debugger should 
 uv run python main.py
 ```
 
+# LangSmith Tracing
+
+## What is LangSmith?
+
+LangSmith is a debugging, monitoring, and observability platform for LangChain and LangGraph applications. It records every step of your AI workflow, allowing you to inspect prompts, model responses, tool calls, agent decisions, execution time, and errors.
+
+Think of LangSmith as **DevTools for AI applications**.
+
+---
+
+## Why Use LangSmith?
+
+* Debug prompts and model outputs
+* Visualize chain and agent execution
+* Monitor tool calls
+* Track latency and performance
+* Identify failures and errors
+* Compare prompts and models
+* Observe production AI applications
+
+---
+
+## Install LangSmith
+
+```bash
+uv add langsmith
+```
+
+---
+
+## Create a LangSmith Account
+
+1. Sign up at https://smith.langchain.com
+2. Generate an API Key from Settings
+
+---
+
+## Environment Variables
+
+Add the following to your `.env` file:
+
+```env
+LANGSMITH_TRACING=true
+LANGSMITH_API_KEY=your_langsmith_api_key
+LANGSMITH_PROJECT=hello-world
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+```
+
+### For EU Region
+
+```env
+LANGSMITH_ENDPOINT=https://eu.api.smith.langchain.com
+```
+
+Use the endpoint that matches the region where your LangSmith account was created.
+
+---
+
+## Run Your Application
+
+```bash
+uv run python main.py
+```
+
+Open your LangSmith dashboard to view traces and execution details.
+
+---
+
+## Common Error
+
+### 403 Forbidden
+
+```text
+Failed to POST ... HTTPError: 403 Forbidden
+```
+
+Possible causes:
+
+* Invalid API key
+* Wrong LangSmith endpoint
+* API key belongs to a different region
+* Project access issue
+
+Verify:
+
+```env
+LANGSMITH_API_KEY=...
+LANGSMITH_ENDPOINT=...
+LANGSMITH_PROJECT=...
+```
+
+---
+
+## Disable Tracing
+
+If you do not want traces to be uploaded:
+
+```env
+LANGSMITH_TRACING=false
+```
+
+or remove the LangSmith environment variables.
+
+---
+
+## Summary
+
+LangSmith helps developers debug, monitor, and understand AI applications by providing detailed traces of chains, agents, tools, and model interactions. It is especially useful when building complex LangChain and LangGraph applications.
 
 -->
 
@@ -1608,3 +1716,112 @@ After setup, add breakpoints and start debugging with `F5`. The debugger should 
 ```bash
 uv run python main.py
 ```
+
+# LangSmith Tracing
+
+## What is LangSmith?
+
+LangSmith is a debugging, monitoring, and observability platform for LangChain and LangGraph applications. It records every step of your AI workflow, allowing you to inspect prompts, model responses, tool calls, agent decisions, execution time, and errors.
+
+Think of LangSmith as **DevTools for AI applications**.
+
+---
+
+## Why Use LangSmith?
+
+- Debug prompts and model outputs
+- Visualize chain and agent execution
+- Monitor tool calls
+- Track latency and performance
+- Identify failures and errors
+- Compare prompts and models
+- Observe production AI applications
+
+---
+
+## Install LangSmith
+
+```bash
+uv add langsmith
+```
+
+---
+
+## Create a LangSmith Account
+
+1. Sign up at https://smith.langchain.com
+2. Generate an API Key from Settings
+
+---
+
+## Environment Variables
+
+Add the following to your `.env` file:
+
+```env
+LANGSMITH_TRACING=true
+LANGSMITH_API_KEY=your_langsmith_api_key
+LANGSMITH_PROJECT=hello-world
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+```
+
+### For EU Region
+
+```env
+LANGSMITH_ENDPOINT=https://eu.api.smith.langchain.com
+```
+
+Use the endpoint that matches the region where your LangSmith account was created.
+
+---
+
+## Run Your Application
+
+```bash
+uv run python main.py
+```
+
+Open your LangSmith dashboard to view traces and execution details.
+
+---
+
+## Common Error
+
+### 403 Forbidden
+
+```text
+Failed to POST ... HTTPError: 403 Forbidden
+```
+
+Possible causes:
+
+- Invalid API key
+- Wrong LangSmith endpoint
+- API key belongs to a different region
+- Project access issue
+
+Verify:
+
+```env
+LANGSMITH_API_KEY=...
+LANGSMITH_ENDPOINT=...
+LANGSMITH_PROJECT=...
+```
+
+---
+
+## Disable Tracing
+
+If you do not want traces to be uploaded:
+
+```env
+LANGSMITH_TRACING=false
+```
+
+or remove the LangSmith environment variables.
+
+---
+
+## Summary
+
+LangSmith helps developers debug, monitor, and understand AI applications by providing detailed traces of chains, agents, tools, and model interactions. It is especially useful when building complex LangChain and LangGraph applications.
